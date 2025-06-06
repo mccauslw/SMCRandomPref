@@ -1,5 +1,12 @@
 .Rproj.user
-output/
+/output/
+
+# Ignore all PDF outputs by default, but all them to be force-added, as
+# documented in /documents/README.md
+/documents/
+# But allow these to be forced-added when finalized
+!/documents/README.md
+
 *.rds
 *.rda
 .Rhistory
