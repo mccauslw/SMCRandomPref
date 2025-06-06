@@ -1,0 +1,195 @@
+---
+output: 
+  pdf_document:
+    extra_dependencies:
+      babel: ["english"]
+      tcolorbox: null
+      enumitem: null
+      gensymb: null
+---
+
+## Results of SMC for choice domain `r exper$id`, ```r domain_name```
+
+### Marginal likelihood of hybrid model as a function of $\lambda$
+
+The next two figures show numerical estimates of the log marginal likelihood $\log f_\lambda(y)$ of the hybrid model indexed by $\lambda$, as a function of $\lambda$.
+$\lambda = 0$ gives the Dirichlet RC model and $\lambda=1$, the Dirichlet RP model.
+The first figure shows a numerical estimate based on all $J$ groups of SMC particles (black) as well as the same numerical estimate plus and minus the numerical standard error of the estimate (both in green).
+If there appears to be a single green curve, this indicates that the error is imperceptible at the resolution of the graph.
+
+The second figure shows $J$ estimates in grey, one for each group $j=1,\ldots,J$ of particles, to illustrate the numerical variation across groups.
+A red line indicates the numerical estimate using all $J$ groups.
+
+```{r ln_marl_plots, echo=FALSE}
+cycle_stats <- exper$RP_cycle_stats
+lambda_stats <- exper$RP_lambda_stats
+
+plot(cycle_stats[, 'lambda'], cycle_stats[, 'cum_ln_marl'], 'l',
+     xlab=TeX('\\lambda'),
+     ylab=TeX('$\\log f_\\lambda(y)$'))
+lines(cycle_stats[, 'lambda'], cycle_stats[, 'cum_ln_marl'] +
+        sqrt(cycle_stats[, 'cum_ln_marl_nse2']), col='green')
+lines(cycle_stats[, 'lambda'], cycle_stats[, 'cum_ln_marl'] -
+        sqrt(cycle_stats[, 'cum_ln_marl_nse2']), col='green')
+  
+gr_cum = lambda_stats$gr_cum_ln_marl
+lam = lambda_stats$aggregates[,'lambda']
+ln_marl = lambda_stats$aggregates[,'cum_ln_marl']
+J = nrow(gr_cum)
+plot(lam, ln_marl, 'l',
+     xlab=TeX('\\lambda'),
+     ylab=TeX('$\\log f_\\lambda(y)$'))
+for (j in seq(J))
+  lines(lam, gr_cum[j,], col='grey')
+lines(lam, ln_marl)
+lines(cycle_stats[, 'lambda'], cycle_stats[, 'cum_ln_marl'], col='red')
+```
+
+\pagebreak
+
+### Posterior densities of binary choice probabilities
+
+The following figure shows posterior densities of binary choice probabilities, for the ten doubleton menus in the domain.
+Each panel corresponds to a doubleton menu: the ordered pair lists the choice options in the menu and the plot shows posterior densities for the probability of choosing the first option of the pair.
+For example, the top left panel, labelled $(a,b)$, gives posterior densities of the probability $P_{\{a,b\}}(a)$.
+In each panel, the green curve is the density for the Dirichlet RC model ($\lambda=0$) and the red curve is the density for the Dirichlet RP model ($\lambda=1$).
+
+```{r bin_plots, echo=FALSE}
+RC_funcs = exper$RC_binp_funcs
+RP_funcs = exper$RP_binp_funcs
+par(mfrow=c(4,4), mar=c(1,1,1,1))
+bins = c(1,2,3,4,0,5,6,7,0,0,8,9,0,0,0,10)
+bin_pair = c('(a,b)', '(a,c)', '(a,d)', '(a,e)',
+             '(b,c)', '(b,d)', '(b,e)', '(c,d)', '(c,e)', '(d,e)')
+RC_grid = RC_funcs[[1]]$pdf$x
+RP_grid = RP_funcs[[1]]$pdf$x
+y_max = 0;
+for (i in 1:length(bins)) {
+  b <- bins[i]
+  if (b > 0) {
+    y_max <- max(y_max, max(max(RP_funcs[[b]]$pdf$func), max(RC_funcs[[b]]$pdf$func)))
+  }
+}
+for (i in 1:length(bins)) {
+  b <- bins[i]
+  if (b > 0) {
+    plot(RC_grid, RC_funcs[[b]]$pdf$func, 'l',
+         ylim=c(0, y_max), col='green')
+    lines(RP_grid, RP_funcs[[b]]$pdf$func, col='red')
+    text(0.1, 5, labels=bin_pair[b])
+  }
+  else {
+    plot.new()
+  }
+}
+```
+
+\pagebreak
+
+### Prior and posterior densities of $\alpha$
+
+The following figure shows the prior density of $\alpha$ in black.
+It shows the posterior density for the Dirichlet RC model ($\lambda = 0$) in green and the posterior density for the Dirichlet RP model ($\lambda = 1$) in red.
+
+```{r alpha_plots, echo=FALSE}
+RC <- exper$RC_alpha_funcs
+RP <- exper$RP_alpha_funcs
+a <- exper$RP_hyper[1]; b <- exper$RP_hyper[2]
+alpha_max <- max(max(RC$pdf$x), max(RP$pdf$x))
+alpha_prior <- exper$alpha_prior
+plot(alpha_prior$funcs$pdf$x, alpha_prior$funcs$pdf$func, 'l',
+     xlab=TeX('\\alpha'), ylab='Density value',
+     xlim=c(0, alpha_max),
+     ylim=c(0, max(max(RC$pdf$func), max(RP$pdf$func))))
+lines(RC$pdf$x, RC$pdf$func, col='green')
+lines(RP$pdf$x, RP$pdf$func, col='red')
+```
+
+The following figure shows the mean of $\alpha$ for the hybrid model with $\lambda = \lambda_l$, based on the posterior sample available at the end of the M phase, $l=1,\ldots,L$.
+
+```{r almu, echo=FALSE}
+plot(exper$RP_alpha_mu,
+     xlab=TeX('Cycle index $l=1,\\ldots,L$'),
+     ylab=TeX('$E_\\lambda(\\alpha|y)$ for $\\lambda = \\lambda_l$'))
+```
+
+\pagebreak
+
+### Metropolis-Hastings acceptance probabilities
+
+The following figure shows acceptance probabilities for Metropolis-Hastings updates of $\gamma$ blocks, at the $M$ phase of cycle $l$, $l=1,\ldots,L$.
+The black line shows the average acceptance probability over the $n=5$ blocks of size $(n-1)! = 24$; the grey lines show the acceptance probability for each of these blocks.
+The blue line shows the average acceptance probability over the $n(n-1) = 20$ blocks of size $(n-2)! = 6$; the light green lines show the acceptance probability for each of these blocks.
+
+```{r aPr, echo=FALSE}
+big_aPr = exper$RP_aPr$big
+sm_aPr = exper$RP_aPr$sm
+n_cycles <- nrow(big_aPr)
+plot(seq(n_cycles), rowMeans(big_aPr), 'l',
+     xlab=TeX('Cycle index $l=1\\ldots,L$'),
+     ylab='Acceptance probability', ylim=c(0,1))
+for (i in seq(5))
+  lines(seq(n_cycles), big_aPr[,i], col='grey')
+lines(seq(n_cycles), rowMeans(sm_aPr), col='blue')
+for (i in seq(20))
+  lines(seq(n_cycles), sm_aPr[,i], col='lightgreen')
+```
+
+The following figure shows the acceptance probability for the Metropolis-Hastings update of $\alpha$, at the M phase of cycle $l$, $l=1,\ldots,L$.
+
+```{r alaPr, echo=FALSE}
+plot(exper$RP_alpha_aPr,
+     xlab=TeX('Cycle index $l=1,\\ldots,L$'),
+     ylab='Acceptance probability')
+```
+
+\pagebreak
+
+### Posterior statistics for $\pi$
+
+```{r pi_graphics, echo=FALSE}
+hipi1 <- (exper$RP_pi_mean >= 1/120) #u$n_orders)
+hipi2 <- (exper$RP_pi_mean >= 2/120) #u$n_orders) WJM: change back after run
+pi1 <- exper$RP_pi_mean[hipi1]
+pi2 <- exper$RP_pi_mean[hipi2]
+pi_cor1 <- exper$RP_pi_cor[hipi1, hipi1]
+pi_cor2 <- exper$RP_pi_cor[hipi2, hipi2]
+pi_thin1 <- t(exper$RP_pi_thin[hipi1,])
+pi_thin2 <- t(exper$RP_pi_thin[hipi2,])
+```
+
+The following two plots illustrate features of the posterior distribution $\pi|y$ for the Dirichlet RP model.
+Of the $n! = 120$ elements of $\pi$, `r length(pi2)` have a posterior mean greater than $2/n!$, for a total probability of `r sum(pi2)`.
+For these preference probabilities, the first plot shows the posterior mean (circle) and posterior quantiles, for probabilities 0.25, 0.5, 0.75 and 0.9.
+The second plot shows posterior correlations among them, indicated numerically (lower triangle), by ellipse eccentricity (upper triangle) and by colour (both triangles).
+
+```{r pi_graphics2, echo=FALSE, fig.dim=c(8,3)}
+bp <- boxplot(pi_thin2, plot=F)
+for (i in 1:sum(hipi2)) {
+  bp$stats[5,i] = quantile(pi_thin2[,i], 0.9, names=F)
+}
+bxp(bp, outline=F, las=2)
+points(1:sum(hipi2), exper$RP_pi_mean[hipi2])
+```
+
+```{r pi_graphics3, echo=FALSE, fig.dim=c(8,6)}
+corrplot.mixed(pi_cor2, upper='ellipse', lower='number', tl.pos='lt')
+```
+
+\pagebreak
+
+The following two plots do the same thing for the `r length(pi1)` elements of $\pi$ with a posterior mean greater than $2/n!$.
+These have a total posterior mean probability of `r sum(pi1)`.
+
+```{r pi_graphics4, echo=FALSE, fig.dim=c(8,3)}
+bp <- boxplot(pi_thin1, plot=F)
+for (i in 1:sum(hipi1)) {
+  bp$stats[5,i] = quantile(pi_thin1[,i], 0.9, names=F)
+}
+bxp(bp, outline=F, las=2)
+points(1:sum(hipi1), exper$RP_pi_mean[hipi1])
+```
+
+```{r pi_graphics5, echo=FALSE, fig.dim=c(8,5)}
+corrplot(pi_cor1, method='ellipse')
+```

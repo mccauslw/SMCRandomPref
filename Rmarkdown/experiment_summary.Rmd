@@ -1,0 +1,163 @@
+---
+title: "Summary results using SMC to analyse MMS (2019) data"
+author: "William McCausland"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    citation_package: natbib  # or biblatex, see below
+  html_document:
+    toc: true
+bibliography: bibliography.bib
+vignette: >
+  %\VignetteIndexEntry{MMS_experiment_summary}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = " "
+)
+library(RanCh)
+library(tidyverse)
+library(kableExtra)
+library(here)
+```
+
+```{r preamble, echo=F, message=FALSE, warning=FALSE}
+get_scalars <- function(exper) {
+  n_cycles <- length(exper$RP_cycle_stats[, 'cum_ln_marl'])
+  n_groups <- length(exper$RC_marl_stats$gr_cum_ln_marl)
+  result <-
+    c(mm_marl = exper$max_min_ln_marl,
+      unifP_marl = exper$uniform_P_ln_marl,
+      P_maxl = exper$P_maxl,
+      pi_maxl = exper$pi_maxl$ln_maxl,
+      RC_marl = mean(exper$RC_marl_stats$gr_cum_ln_marl),
+      RC_marl_nse = sd(exper$RC_marl_stats$gr_cum_ln_marl)/sqrt(n_groups),
+      RP_marl = unname(exper$RP_cycle_stats[n_cycles, 'cum_ln_marl']),
+      RP_marl_nse2 = unname(exper$RP_cycle_stats[n_cycles, 'cum_ln_marl_nse2']),
+      pi_nS = sum(exper$pi_maxl$S),
+      pi_nit = exper$pi_maxl$n_iter,
+      pi_sdel = exper$pi_maxl$score_range,
+      pi_ldel = exper$pi_maxl$ln_maxl_diff,
+      RC_t = unname(exper$RC_time[3]),
+      RP_t = unname(exper$RP_time[3]),
+      pi_t = unname(exper$pi_maxl_time[3]),
+      RC_al_mu = exper$RC_alpha_stats$mu,
+      RC_al_nse = exper$RC_alpha_stats$nse,
+      RC_al_rne = exper$RC_alpha_stats$rne,
+      RP_al_mu = exper$RP_alpha_stats$mu,
+      RP_al_nse = exper$RP_alpha_stats$nse,
+      RP_al_rne = exper$RP_alpha_stats$rne,
+      n_plus = exper$n_plus,
+      theta1 = unname(exper$theta[1]),
+      theta2 = unname(exper$theta[2]),
+      theta3 = unname(exper$theta[3])
+    )
+}
+
+tbl <- as_tibble(t(sapply(sim, get_scalars)))
+tbl$exper = seq(32)
+tbl$RP_marl_nse = sqrt(tbl$RP_marl_nse2)
+```
+
+The following table shows marginal and maximum likelihood values by domain.
+The marginal likelihoods for the Dirichlet RC model and Dirichlet RP model are based on simulations and their numerical standard errors (nse) are indicated.
+
+```{r tables, echo=F, message=FALSE, warning=FALSE}
+table_vars <- c('exper', 'mm_marl', 'unifP_marl',
+                'RC_marl', 'RC_marl_nse',
+                'RP_marl', 'RP_marl_nse',
+                'P_maxl', 'pi_maxl')
+digits <- c(0, 2, 2, 2, 4, 2, 3, 2, 2)
+col.names <- c('Domain',
+               'max/min', 'uniform-$P$', 'Dir. RC', 'nse', 'Dir. RP', 'nse',
+               'RC model', 'RP model')
+kbl(tbl[,table_vars], booktabs=T, digits=digits,
+    col.names=col.names, format='latex', escape=F) %>%
+  add_header_above(c(" " = 1,
+                     "Marginal likelihoods" = 6,
+                     "Maximum likelihoods" = 2))
+```
+
+\pagebreak
+
+The following table shows, by domain and for both the Dirichlet RC model and the Dirichlet RP model, a numerical estimate of the posterior mean of $\alpha$, its numerical standard error and its relative numerical efficiency.
+```{r alpha_table, echo=F, message=FALSE, warning=FALSE}
+table_vars <- c('exper', 'RC_al_mu', 'RC_al_nse', 'RC_al_rne',
+                'RP_al_mu', 'RP_al_nse', 'RP_al_rne')
+digits <- c(0, 2, 3, 2, 2, 3, 2)
+col.names <- c('Domain',
+               'Est. mean of $\\alpha$', 'nse', 'rne',
+               'Est. mean of $\\alpha$', 'nse', 'rne')
+kbl(tbl[,table_vars], booktabs=T, digits=digits,
+    col.names=col.names, format='latex', escape=F) %>%
+  add_header_above(c(" " = 1,
+                     "Dirichlet RC posterior" = 3,
+                     "Dirichlet RP posterior" = 3))
+```
+
+\pagebreak
+
+The following table shows, by domain, the computation time, in seconds, required to compute the RP maximum likelihood, to simulate the posterior distribution of the Dirichlet RC model and to simulate the posterior distribution of the Dirichlet RP model and of intermediate hybrid models.
+```{r timing_table, echo=F, message=FALSE, warning=FALSE}
+table_vars <- c('exper', 'pi_t', 'RC_t', 'RP_t')
+digits <- c(0, 2, 2, 2)
+col.names <- c('Domain', 'RP max. likelihood', 'DRC posterior', 'DRP posterior')
+kbl(tbl[,table_vars], booktabs=T, digits=digits,
+    col.names=col.names, format='latex', escape=F)
+```
+
+\pagebreak
+
+The following table shows, by domain, information related to the numerical maximization of the RP likelihood over the probability simplex of dimension $n!-1 = 119$.
+Column 2 gives the final value of the maximum likelihood.
+Columns 3 and 4 give the number of iterations, and the computational time, in seconds, required to meet the stopping criterion.
+Column 5 gives the maximum number of strictly positive preference probabilities over all solutions to the maximum likelihood program.
+Column 6 shows the difference between the maximum and minimum log likelihood gradient elements associated with strictly positive preference probabilities.
+Column 7 shows the gain in the value of the log likelihood at the last iteration.
+```{r RPmax_table, echo=F, message=FALSE, warning=FALSE}
+table_vars <- c('exper', 'pi_maxl', 'pi_nit', 'pi_t', 'pi_nS', 'pi_sdel', 'pi_ldel')
+digits <- c(0, 2, 0, 2, 0, 7, 14)
+col.names <- c('Domain', 'Max. like.', 'Nb. of iterations', 'Time ($s$)',
+               'Nb. $\\pi_i > 0$', 'score range', '$\\Delta$ like')
+kbl(tbl[,table_vars], booktabs=T, digits=digits,
+    col.names=col.names, format='latex', escape=F)
+```
+
+\pagebreak
+
+The following table specifies the implementation details for the SMC simulation methods.
+The first column gives $l$, the index of the target distribution.
+The second column gives $\lambda_l$, the index of the hybrid model whose posterior distribution is target distribution $l$.
+The third and fourth columns give $S_1^{(l)}$ and $\phi_1^{(l)}$, the number of repetitions and the autocorrelation parameter of the mutation stage update of each large block $\gamma_{[x....]}$.
+The fourth and fifth columns give $S_2^{(l)}$ and $\phi_2^{(l)}$, the number of repetitions and the autocorrelation parameter of the mutation stage update of each small block $\gamma_{[xy...]}$.
+
+```{r cycle_table, echo=F, message=FALSE, warning=FALSE}
+cycle_schedule <- sim[[1]]$cycle_schedule
+cycle_schedule$l <- seq(nrow(cycle_schedule))
+table_vars <- c('l', 'lambda_breaks', 'n_big_sweeps', 'phi_big_sweeps',
+                'n_sm_sweeps', 'phi_sm_sweeps')
+digits <- c(0, 4, 0, 4, 0, 4)
+col.names <- c('$l$', '$\\lambda_l$',
+               '$S_1^{(l)}$', '$\\phi_1^{(l)}$',
+               '$S_2^{(l)}$', '$\\phi_2^{(l)}$')
+kbl(cycle_schedule[,table_vars], booktabs=T, digits=digits,
+    col.names = col.names, format='latex', escape=F)
+```
+
+\pagebreak
+
+The following table specifies some computations related to simulation.
+The first column gives the number of $(x,A)$ pairs such that $N_A(x) > 0$, out of a possible 75.
+The second through fourth columns give the elements of the $\theta$ parameter of the initial importance Beta-prime distribution.
+
+```{r sim_table, echo=F, message=FALSE, warning=FALSE}
+table_vars <- c('exper', 'n_plus', 'theta1', 'theta2', 'theta3')
+digits <- c(0, 0, 2, 2, 2)
+col.names <- c('Domain', '$N_+$', '$\\theta_1$', '$\\theta_2$', '$\\theta_3$')
+kbl(tbl[,table_vars], booktabs=T, digits=digits,
+    col.names = col.names, format='latex', escape=F)
+```
