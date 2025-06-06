@@ -1,0 +1,21 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# smc_for_random_choice
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of smc_for_random_choice is to provide supplementary materials for the
+paper "Sequential Monte Carlo for random preferences", by William McCausland.
+
