@@ -2,16 +2,7 @@
 title: "Summary results using SMC to analyse MMS (2019) data"
 author: "William McCausland"
 date: "`r Sys.Date()`"
-output:
-  pdf_document:
-    citation_package: natbib  # or biblatex, see below
-  html_document:
-    toc: true
-bibliography: bibliography.bib
-vignette: >
-  %\VignetteIndexEntry{MMS_experiment_summary}
-  %\VignetteEncoding{UTF-8}
-  %\VignetteEngine{knitr::rmarkdown}
+output: pdf_document
 ---
 
 ```{r setup, include = FALSE}
@@ -23,7 +14,6 @@ library(RanCh)
 library(tidyverse)
 library(kableExtra)
 library(here)
-source("create_results_table.R")
 ```
 
 The following table shows marginal and maximum likelihood values by domain.

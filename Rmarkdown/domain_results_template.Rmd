@@ -8,6 +8,12 @@ output:
       gensymb: null
 ---
 
+## Data for choice domain `r exper$id`, ```r domain_name```
+
+```{r data, echo=FALSE}
+print(exper$N, na.print='-')
+```
+
 ## Results of SMC for choice domain `r exper$id`, ```r domain_name```
 
 ### Marginal likelihood of hybrid model as a function of $\lambda$

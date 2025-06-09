@@ -1,6 +1,8 @@
 library(tidyverse)
 library(extraDistr)
 
+set.seed(123456)
+
 n_experiments <- dim(MMS_2019_counts)[1]
 
 pi_maxl_set = seq(n_experiments)

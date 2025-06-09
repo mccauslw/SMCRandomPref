@@ -44,32 +44,17 @@ domain_names = c(
   'charity')
 
 sim <- readRDS(here("data", "sim.rds"))
-rmarkdown::render(here("Rmarkdown", "experiment_summary.Rmd"),
-                  output_file = here("documents", "experiment_summary.pdf"),
+source(here("R", "tabulate_results.R"))
+rmarkdown::render(here("Rmarkdown", "overview_of_results.Rmd"),
+                  output_file = here("documents", "overview_of_results.pdf"),
                   params = list(sim = sim))
 
-#all_domains_data = c()
-#all_domains_data_smc = c()
 for (i in seq(32)) {
   exper <- sim[[i]]
   domain_name = domain_names[i]
-  outname <- paste("domain", i, "data.pdf", sep='_')
-  rmarkdown::render(here("Rmarkdown", "domain_template.Rmd"),
+  outname <- paste("domain", i, "results.pdf", sep='_')
+  rmarkdown::render(here("Rmarkdown", "domain_results_template.Rmd"),
                     output_file = here("documents", outname),
                     params = list(exper = exper,
                                   domain_name = domain_name))
-  #all_domains_data = c(all_domains_data, outname)
-  #all_domains_data_smc = c(all_domains_data_smc, outname)
-  #outname <- paste("./Experiments/domain", i, "smc.pdf", sep='_')
-  #rmarkdown::render("domain_template.Rmd",
-  #                  output_file = outname,
-  #                  params = list(exper = exper,
-  #                                domain_name = domain_name))
-  #all_domains_data_smc = c(all_domains_data_smc, outname)
 }
-
-#pdf_combine(input = all_domains_data, output = "all_domains_data.pdf")
-#pdf_combine(input = all_domains_data_smc, output = "all_domains_data_smc.pdf")
-
-#rmarkdown::render("feedback.Rmd",
-#                  output_file = "feedback")

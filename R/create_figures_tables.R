@@ -1,4 +1,4 @@
-source("create_results_table.R")
+source(here("R", "tabulate_results.R"))
 
 ####### Figures
 
