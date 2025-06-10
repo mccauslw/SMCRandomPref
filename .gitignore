@@ -1,14 +1,17 @@
-.Rproj.user
-/data/
-
 # Ignore all PDF outputs by default, but allow them to be force-added, as
 # documented in /documents/README.md
 /documents/
 # But allow these to be forced-added when finalized
 !/documents/README.md
 
+/paper/figures/*.pdf
+/paper/SMCRandomPref.*
+!/paper/SMCRandomPref.tex
+
+/data/
 *.rds
 *.rda
+.Rproj.user
 .Rhistory
 .Rdata
 .httr-oauth
