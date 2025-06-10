@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 This repository contains an R package, with
 
 - The current version of the research paper *Sequential Monte Carlo for random preferences*, by William McCausland
-- Supplementary material in PDF form with additional detailed results and visualizations
+- Supplementary material in PDF form with additional results and visualizations
 - R scripts and R Markdown documents used to generate figures and tables in the paper and to build the supplementary material. These scripts and documents use routines and data in the author's R package RanCh but are otherwise self-contained.
 
 It includes the following key components:

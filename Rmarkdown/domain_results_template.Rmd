@@ -10,7 +10,7 @@ output:
 
 ## Data for choice domain `r exper$id`, ```r domain_name```
 
-```{r data, echo=FALSE}
+```{r data, echo=FALSE, comment=NA}
 print(exper$N, na.print='-')
 ```
 
@@ -154,8 +154,8 @@ plot(exper$RP_alpha_aPr,
 ### Posterior statistics for $\pi$
 
 ```{r pi_graphics, echo=FALSE}
-hipi1 <- (exper$RP_pi_mean >= 1/120) #u$n_orders)
-hipi2 <- (exper$RP_pi_mean >= 2/120) #u$n_orders) WJM: change back after run
+hipi1 <- (exper$RP_pi_mean >= u$n_orders)
+hipi2 <- (exper$RP_pi_mean >= u$n_orders)
 pi1 <- exper$RP_pi_mean[hipi1]
 pi2 <- exper$RP_pi_mean[hipi2]
 pi_cor1 <- exper$RP_pi_cor[hipi1, hipi1]

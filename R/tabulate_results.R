@@ -5,7 +5,7 @@ library(kableExtra)
 library(corrplot)
 library(here)
 
-get_scalars <- function(exper) {
+get_scalars <- function(exper, u) {
   n_cycles <- length(exper$RP_cycle_stats[, 'cum_ln_marl'])
   n_groups <- length(exper$RC_marl_stats$gr_cum_ln_marl)
   result <-
@@ -48,9 +48,9 @@ get_scalars <- function(exper) {
       RP_al_q025_nse = unname(exper$RP_alpha_stats$q_nse[1]),
       RP_al_q5_nse = unname(exper$RP_alpha_stats$q_nse[3]),
       RP_al_q975_nse = unname(exper$RP_alpha_stats$q_nse[5]),
-      n_hipi1 = sum(exper$RP_pi_mean >= 1/120),
-      n_hipi2 = sum(exper$RP_pi_mean >= 2/120),
-      n_hipi4 = sum(exper$RP_pi_mean >= 4/120),
+      n_hipi1 = sum(exper$RP_pi_mean >= 1/u$n_orders),
+      n_hipi2 = sum(exper$RP_pi_mean >= 2/u$n_orders),
+      n_hipi4 = sum(exper$RP_pi_mean >= 4/u$n_orders),
       n_plus = exper$n_plus,
       theta1 = unname(exper$theta[1]),
       theta2 = unname(exper$theta[2]),
@@ -59,5 +59,6 @@ get_scalars <- function(exper) {
 }
 
 sim <- readRDS(here("data", "sim.rds"))
-tbl <- as_tibble(t(sapply(sim, get_scalars)))
-tbl$exper = seq(32)
+u <- readRDS(here("data", "u.rds"))
+tbl <- as_tibble(t(sapply(sim, get_scalars, u)))
+tbl$exper = seq_along(sim)

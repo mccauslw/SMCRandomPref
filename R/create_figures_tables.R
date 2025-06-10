@@ -9,11 +9,11 @@ plot(tbl$mm_marl, ylim=c(-1100, -600), pch=15, cex=cex,
      main = NULL,
      xlab = "Domain",
      ylab = "Log maximum or marginal likelihood")
-points(seq(32), tbl$unifP_marl, pch=16, cex=cex)
-points(seq(32), tbl$RC_marl, pch=17, cex=cex)
-points(seq(32), tbl$RP_marl, pch=18, cex=cex)
-points(seq(32), tbl$P_maxl, pch=2, cex=cex)
-points(seq(32), tbl$pi_maxl, pch=5, cex=cex)
+points(tbl$exper, tbl$unifP_marl, pch=16, cex=cex)
+points(tbl$exper, tbl$RC_marl, pch=17, cex=cex)
+points(tbl$exper, tbl$RP_marl, pch=18, cex=cex)
+points(tbl$exper, tbl$P_maxl, pch=2, cex=cex)
+points(tbl$exper, tbl$pi_maxl, pch=5, cex=cex)
 legend(x='topleft', cex=cex,
        pch=c(15, 16, 17, 18, 2, 5),
        legend=c("max-min log likelihood", "uniform-P log marginal likelihood",
@@ -28,9 +28,9 @@ plot(tbl$RC_marl - tbl$unifP_marl, ylim=c(-20,100), pch=17, cex=cex,
      main = NULL,
      xlab = "Domain",
      ylab = "Log Bayes factor or likelihood difference")
-points(seq(32), tbl$RP_marl - tbl$unifP_marl, pch=18, cex=cex)
-points(seq(32), tbl$P_maxl - tbl$unifP_marl, pch=2, cex=cex)
-points(seq(32), tbl$pi_maxl - tbl$unifP_marl, pch=5, cex=cex)
+points(tbl$exper, tbl$RP_marl - tbl$unifP_marl, pch=18, cex=cex)
+points(tbl$exper, tbl$P_maxl - tbl$unifP_marl, pch=2, cex=cex)
+points(tbl$exper, tbl$pi_maxl - tbl$unifP_marl, pch=5, cex=cex)
 legend(x='bottomleft', cex=cex,
        pch=c(17, 18, 2, 5),
        legend=c("Dirichlet RC log BF", "Dirichlet RP log BF",
@@ -106,8 +106,8 @@ dev.off()
 
 #### Posterior correlations among high probability pi_i elements
 exper <- sim[[1]]
-hipi1 <- (exper$RP_pi_mean >= 1/120)
-hipi2 <- (exper$RP_pi_mean >= 2/120)
+hipi1 <- (exper$RP_pi_mean >= 1/(u$n_orders))
+hipi2 <- (exper$RP_pi_mean >= 2/(u$n_orders))
 pi_cor1 <- exper$RP_pi_cor[hipi1, hipi1]
 pi_cor2 <- exper$RP_pi_cor[hipi2, hipi2]
 pi_thin2 <- t(exper$RP_pi_thin[hipi2,])
@@ -125,7 +125,7 @@ dev.off()
 ######## Tables
 
 # Posterior alpha statistics, by domain
-tbl$exper <- seq(32)
+tbl$exper <- tbl$exper
 table_vars <- c('exper',
                'RC_al_mu', 'RC_al_std', 'RC_al_nse',
                'RP_al_mu', 'RP_al_std', 'RP_al_nse')

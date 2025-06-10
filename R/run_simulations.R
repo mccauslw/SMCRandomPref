@@ -126,5 +126,5 @@ for (i in seq(n_experiments)) {
 
 #Rprof(NULL)
 
-saveRDS(u, file = here("data", "sim.rds"))
-saveRDS(u, file = here("u", "u.rds"))
+saveRDS(sim, file = here("data", "sim.rds"))
+saveRDS(u, file = here("data", "u.rds"))

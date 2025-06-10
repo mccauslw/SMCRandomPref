@@ -1,0 +1,17 @@
+Package: SMCRandomPref
+Title: Paper "Sequential Monte Carlo for random preferences" and supplementary material
+Version: 0.0.0.9000
+Authors@R: 
+    person("William", "McCausland", , "william.j.mccausland@umontreal.ca", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-9896-235X"))
+Description:
+This package provides the current version of the research paper "Sequential
+Monte Carlo for random preferences", by William McCausland, supplementary
+material in PDF form with additional results and visualizations, as well as R
+scripts and R Markdown documents used to generate figures and tables in the
+paper and to build the supplementary material.
+These scripts and documents use routines and data in the author's R package RanCh but are otherwise self-contained.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
