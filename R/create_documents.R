@@ -61,7 +61,8 @@ rmarkdown::render(here("Rmarkdown", "overview_of_results.Rmd"),
                   output_file = here("documents", "overview_of_results.pdf"),
                   params = list(sim = sim))
 
-for (i in seq_along(sim)) {
+for (i in c(1)) {
+#for (i in seq_along(sim)) {
   exper <- sim[[i]]
   domain_name = domain_names[i]
   outname <- paste("domain", i, "results.pdf", sep='_')

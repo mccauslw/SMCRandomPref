@@ -1,4 +1,7 @@
 ---
+title: "Supplement to the paper 'Sequential Monte Carlo for random preference'"
+subtitle: "Detailed analysis for choice domain `r exper$id`, ```r domain_name```"
+date: "`r Sys.Date()`"
 output: 
   pdf_document:
     extra_dependencies:
@@ -8,15 +11,28 @@ output:
       gensymb: null
 ---
 
-## Data for choice domain `r exper$id`, ```r domain_name```
+## Rata data
+
+The following table shows the raw data for this choice domain.
+Each entry $(A,x)$ gives the number of times object $x$ was chosen from the subset $A$.
 
 ```{r data, echo=FALSE, comment=NA}
 print(exper$N, na.print='-')
 ```
 
-## Results of SMC for choice domain `r exper$id`, ```r domain_name```
+\pagebreak
 
-### Marginal likelihood of hybrid model as a function of $\lambda$
+## Simplex plots
+
+The following figure shows an array of simplex plots for the tripleton subsets of the choice domain.
+
+```{r simplex_plots, echo=FALSE, fig.width=8, fig.height=10}
+RanCh::bin_term_MR_plot_all(exper$N)
+```
+
+\pagebreak
+
+## Marginal likelihood of hybrid model as a function of $\lambda$
 
 The next two figures show numerical estimates of the log marginal likelihood $\log f_\lambda(y)$ of the hybrid model indexed by $\lambda$, as a function of $\lambda$.
 $\lambda = 0$ gives the Dirichlet RC model and $\lambda=1$, the Dirichlet RP model.
@@ -154,8 +170,8 @@ plot(exper$RP_alpha_aPr,
 ### Posterior statistics for $\pi$
 
 ```{r pi_graphics, echo=FALSE}
-hipi1 <- (exper$RP_pi_mean >= u$n_orders)
-hipi2 <- (exper$RP_pi_mean >= u$n_orders)
+hipi1 <- (exper$RP_pi_mean >= (1/u$n_orders))
+hipi2 <- (exper$RP_pi_mean >= (2/u$n_orders))
 pi1 <- exper$RP_pi_mean[hipi1]
 pi2 <- exper$RP_pi_mean[hipi2]
 pi_cor1 <- exper$RP_pi_cor[hipi1, hipi1]
