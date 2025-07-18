@@ -27,7 +27,7 @@ print(exper$N, na.print='-')
 The following figure shows an array of simplex plots for the tripleton subsets of the choice domain.
 
 ```{r simplex_plots, echo=FALSE, fig.width=8, fig.height=10}
-RanCh::bin_term_MR_plot_all(exper$N)
+RanCh::bin_tern_MR_plot_all(exper$N)
 ```
 
 \pagebreak
