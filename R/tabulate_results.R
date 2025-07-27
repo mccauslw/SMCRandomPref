@@ -1,3 +1,8 @@
+# tabulate_results.R
+
+# Contains code used by create_documents.R and create_figures_tables.R.
+# Do not run this file directly, it is sourced by the other scripts.
+
 library(RanCh)
 library(tidyverse)
 library(knitr)
@@ -6,7 +11,7 @@ library(corrplot)
 library(here)
 
 get_scalars <- function(exper, u) {
-  n_cycles <- length(exper$RP_cycle_stats[, 'cum_ln_marl'])
+  n_cycles <- nrow(exper$RP_cycle_stats)
   n_groups <- length(exper$RC_marl_stats$gr_cum_ln_marl)
   result <-
     c(mm_marl = exper$max_min_ln_marl,
@@ -60,5 +65,5 @@ get_scalars <- function(exper, u) {
 
 sim <- readRDS(here("data", "sim.rds"))
 u <- readRDS(here("data", "u.rds"))
-tbl <- as_tibble(t(sapply(sim, get_scalars, u)))
+tbl <- map_dfr(sim, ~{get_scalars(.x, u)})
 tbl$exper = seq_along(sim)

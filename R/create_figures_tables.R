@@ -1,3 +1,8 @@
+# create_figures_tables.R
+
+# Create figures and tables for the RanCh paper.
+
+library(here)
 source(here("R", "tabulate_results.R"))
 
 ####### Figures

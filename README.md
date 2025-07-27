@@ -39,11 +39,14 @@ domain as an example are provided here for every domain.
 
 ### `R/`
 
-This folder contains **R scripts** used to generate:
+This folder contains **R scripts** used to generate figures, tables and documents:
 
-- Figures used in the paper, stored in `paper/figures/`
-- Tables used in the paper, stored in `paper/tables`
-- Supplementary material, stored in `documents/`
+- `create_documents.R` creates the supplementary material, stored in
+`documents/`
+- `create_figures_tables.R` creates the figures used in the paper, stored in
+`paper/figures/`, and the tables used in the paper, stored in `paper/tables`
+- `tabulate_results.R` contains code used by the first two scripts
+- `run_simulations.R` runs the sequential Monte Carlo simulations
 
 ### `Rmarkdown/`
 

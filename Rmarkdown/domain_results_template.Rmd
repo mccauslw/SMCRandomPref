@@ -11,7 +11,7 @@ output:
       gensymb: null
 ---
 
-## Rata data
+## Raw data
 
 The following table shows the raw data for this choice domain.
 Each entry $(A,x)$ gives the number of times object $x$ was chosen from the subset $A$.

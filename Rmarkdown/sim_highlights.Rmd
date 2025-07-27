@@ -1,0 +1,319 @@
+---
+title: "Highlights of posterior analysis"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    extra_dependencies:
+      babel: ["english"]
+      tcolorbox: null
+      enumitem: null
+      gensymb: null
+---
+
+```{r setup, echo=FALSE}
+#knitr::opts_chunk$set(include = TRUE)
+library(ggplot2)
+library(latex2exp)
+library(patchwork)
+library(tidyverse)
+library(tibble)
+library(corrplot)
+```
+
+## Raw data
+
+The following table shows the raw data for this choice domain.
+Each entry $(A,x)$ gives the number of times object $x$ was chosen from the subset $A$.
+
+```{r data2, echo=FALSE}
+N_disp <- N
+N_disp[is.na(N_disp)] <- "-"
+knitr::kable(N_disp, caption = "Counts by menu and object",
+             align = c("l", rep("r", ncol(N)-1))) %>%
+   kableExtra::kable_styling(full_width = FALSE)
+```
+
+\pagebreak
+
+## Simplex plots
+
+The following figure shows an array of simplex plots for the tripleton subsets of the choice domain.
+
+```{r simplex_plots, echo=FALSE, fig.width=8, fig.height=10}
+RanCh::bin_tern_MR_plot_all(N)
+```
+
+\pagebreak
+
+## Marginal likelihood $f_\lambda(y)$ of hybrid model as a function of $\lambda$
+
+The next two figures show numerical estimates of the log marginal likelihood $\log f_\lambda(y)$ of the hybrid model indexed by $\lambda$, as a function of $\lambda$.
+$\lambda = 0$ gives the Dirichlet RC model and $\lambda=1$, the Dirichlet RP model.
+The first figure shows a numerical estimate based on all $J$ groups of SMC particles (black) as well as an error band (in red, based on 99\% confidence intervals).
+If the error band is invisible, this indicates that the error is imperceptible at the resolution of the graph.
+
+The second figure shows $J$ estimates in grey, one for each group $j=1,\ldots,J$ of particles, to illustrate the numerical variation across groups.
+A red line indicates the numerical estimate using all $J$ groups.
+
+```{r ln_marl_nse, echo=FALSE}
+# Prepare data
+cycle_stats <- RP_sim$cycle_stats
+nse = sqrt(cycle_stats$cum_ln_marl_nse2)
+cycle_stats$upper <- cycle_stats$cum_ln_marl + qnorm(0.995) * nse
+cycle_stats$lower <- cycle_stats$cum_ln_marl + qnorm(0.005) * nse 
+
+ggplot(cycle_stats, aes(x = lambda)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "red", alpha = 0.4) +
+  geom_line(aes(y = cum_ln_marl), color = "black", linewidth = 0.2) +
+  labs(x = TeX("\\lambda"), y = TeX("$\\log\\,f_{\\lambda}(y)$")) +
+  theme_minimal()
+
+lambda_stats <- RP_sim$lambda_stats
+aggr_stats <- lambda_stats$aggregates
+gr_df <- as_tibble(lambda_stats$gr_cum_ln_marl)
+gr_df$lambda <- lambda_stats$aggregates[,'lambda']
+
+gr_df$aggr_cum_ln_marl <- aggr_stats[,'cum_ln_marl']
+gr_long <- pivot_longer(
+  gr_df, cols = -c(lambda, aggr_cum_ln_marl),
+  names_to = "group", values_to = "cum_ln_marl"
+)
+
+ggplot() +
+  geom_line(data = gr_long, aes(x = lambda, y = cum_ln_marl, group = group),
+            color = "grey", size = 0.2) +
+  geom_line(data = gr_long, aes(x = lambda, y = aggr_cum_ln_marl),
+            color = "black", size = 0.3) +
+  labs(x = TeX("\\lambda"), y = TeX("$\\log\\,f_{\\lambda}(y)$ by group")) +
+  theme_minimal()
+```
+
+\pagebreak
+
+### Posterior densities of binary choice probabilities
+
+The following figure shows posterior densities of binary choice probabilities, for all doubleton menus in the universe of objects.
+Each panel corresponds to a doubleton menu: the ordered pair lists the choice options in the menu and the plot shows posterior densities for the probability of choosing the first option of the pair.
+For example, the top left panel, labelled $(a,b)$, gives posterior densities of the probability $P_{\{a,b\}}(a)$.
+In each panel, the green curve is the density for the Dirichlet RC model ($\lambda=0$) and the red curve is the density for the Dirichlet RP model ($\lambda=1$).
+
+```{r bin_plots, echo=FALSE}
+n <- ncol(N)  # number of objects
+blank_theme <- theme(
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  axis.ticks = element_blank(),
+  panel.spacing = unit(1.5, "lines")
+)
+blank_plot <- ggplot() + theme_void() +
+              theme(panel.border = element_blank())
+
+p_grid <- seq(0, 1, by=1/80)
+RC_binp_funcs <- compute_RC_binp_funcs(u, RC_sim$alpha, J, Nv, p_grid)
+RP_binp_funcs <- compute_RP_binp_funcs(u, RP_sim$gamma, J, Nv, p_grid)
+
+y_max = 0;
+for (b in 1:(u_const$n_doubletons[n])) {
+  y_max <- max(y_max, max(max(RC_binp_funcs[[b]]$pdf$func),
+                          max(RP_binp_funcs[[b]]$pdf$func)))
+}
+
+plots <- vector("list", (n-1) * (n-1))
+b_upper <- 1
+b <- 1
+for (i in 1:(n-1)) {
+  for (j in 2:n) {
+    if (i < j) {
+      bin_name <- paste0("p(", colnames(N)[[i]], ", ", colnames(N)[[j]], ")")
+      
+      RC_bin_pdf <- RC_binp_funcs[[b_upper]]$pdf # post. pdf of p(i,j), RC model
+      RC_bin_pdf$upper <- RC_bin_pdf$func + qnorm(0.975) * RC_bin_pdf$nse
+      RC_bin_pdf$lower <- RC_bin_pdf$func + qnorm(0.025) * RC_bin_pdf$nse
+
+      RP_bin_pdf <- RP_binp_funcs[[b_upper]]$pdf # post. pdf of p(i,j), RP model
+      RP_bin_pdf$upper <- RP_bin_pdf$func + qnorm(0.975) * RP_bin_pdf$nse
+      RP_bin_pdf$lower <- RP_bin_pdf$func + qnorm(0.025) * RP_bin_pdf$nse
+      plots[[b]] <- ggplot() +
+        geom_line(data = RC_bin_pdf, aes(x = x, y = func), color = "blue",
+                  linewidth = 0.2) +
+        geom_ribbon(data = RC_bin_pdf, aes(x = x, ymin = lower, ymax = upper),
+                    fill = "grey", alpha = 0.2) +
+        geom_line(data = RP_bin_pdf, aes(x = x, y = func), color = "red",
+                  linewidth = 0.2) +
+        geom_ribbon(data = RP_bin_pdf, aes(x = x, ymin = lower, ymax = upper),
+                    fill = "grey", alpha = 0.2) +
+        annotate("text", x = 0.2, y = 7, label = bin_name, hjust = 0.5) +
+        ylim(0, y_max) +
+        blank_theme
+      if (j == (i+1)) {
+        plots[[b]] <- plots[[b]] +
+          theme(axis.text.x = element_text(size = 8))
+      }
+      b_upper <- b_upper + 1
+    } else {
+      plots[[b]] <- blank_plot
+    }
+    b <- b + 1
+  }
+}
+
+wrap_plots(plots, ncol = n-1)
+```
+
+\pagebreak
+
+### Prior and posterior densities of $\alpha$
+
+The next figure shows the prior density, the posterior density for the Dirichlet RC model ($\lambda = 0$) and the posterior density for the Dirichlet RP model ($\lambda = 1$).
+
+```{r alpha_plots, echo=FALSE}
+n_alpha_grid <- 40
+RC_al_funcs <- compute_pdf_cdf_on_grid(RC_sim$alpha, J, n_alpha_grid)
+RP_al_funcs <- compute_pdf_cdf_on_grid(RP_sim$alpha, J, n_alpha_grid)
+prior_tb <- as_tibble(alpha_prior$funcs$pdf)
+RC_tb <- as_tibble(RC_al_funcs$pdf)
+RP_tb <- as_tibble(RP_al_funcs$pdf)
+alpha_max <- max(max(prior_tb$x), max(RC_al_funcs$pdf$x), max(RP_al_funcs$pdf$x))
+func_max <- max(max(prior_tb$func),
+                max(RC_al_funcs$pdf$func), max(RP_al_funcs$pdf$func))
+
+ggplot() +
+  geom_line(data = prior_tb, aes(x = x, y = func, color = "prior")) +
+  geom_line(data = RC_tb, aes(x = x, y = func, color = "posterior, RC model")) +
+  geom_line(data = RP_tb, aes(x = x, y = func, color = "posterior, RP model")) +
+  scale_color_manual(values = c("prior" = "black",
+                                "posterior, RC model" = "blue",
+                                "posterior, RP model" = "red"),
+                     breaks = c("prior",
+                                "posterior, RC model",
+                                "posterior, RP model")) +
+  labs(x = TeX("\\alpha"), y = "density", color = "Distribution of alpha") +
+  xlim(0, alpha_max) + ylim(0, func_max) +
+  theme_minimal()
+```
+
+This shows the posterior mean of $\alpha$ for the hybrid models indexed by the $\lambda$ values at the end of each cycle.
+
+```{r almu, echo=FALSE}
+ggplot() +
+  geom_point(data = RP_sim$cycle_stats, aes(x = lambda, y = alpha_mean)) +
+  labs(x = TeX("\\lambda"),
+       y = TeX("$E_\\lambda(\\alpha|y)$")) +
+  theme_minimal()
+```
+
+\pagebreak
+
+### Posterior statistics for $\pi$
+
+```{r pi_graphics, echo=FALSE}
+pi <- scale(RP_sim$gamma, center = F, scale = colSums(RP_sim$gamma))
+pi_mean <- rowMeans(pi)
+hipi1 <- (pi_mean >= (1/u$n_orders))
+hipi2 <- (pi_mean >= (2/u$n_orders))
+pi1 <- pi_mean[hipi1]
+pi2 <- pi_mean[hipi2]
+pi_cor <- cor(t(pi))
+pi_cor1 <- pi_cor[hipi1, hipi1]
+pi_cor2 <- pi_cor[hipi2, hipi2]
+pi_thin <- t(pi[, seq(10, M*J, by=10)])
+pi_thin1 <- pi_thin[, hipi1]
+pi_thin2 <- pi_thin[, hipi2]
+```
+
+The following two plots illustrate features of the posterior distribution $\pi|y$ for the Dirichlet RP model.
+Of the $n! = 120$ elements of $\pi$, `r length(pi2)` have a posterior mean greater than $2/n!$, for a total probability of `r sum(pi2)`.
+For these preference probabilities, the first plot shows the posterior mean (circle) and posterior quantiles, for probabilities 0.25, 0.5, 0.75 and 0.9.
+The second plot shows posterior correlations among them, indicated numerically (lower triangle), by ellipse eccentricity (upper triangle) and by colour (both triangles).
+
+```{r pi_graphics2, echo=FALSE, fig.dim=c(8,3)}
+bp <- boxplot(pi_thin2, plot=F)
+for (i in 1:sum(hipi2)) {
+  bp$stats[5,i] = quantile(pi_thin2[,i], 0.9, names=F)
+}
+bxp(bp, outline=F, las=2)
+points(1:sum(hipi2), pi_mean[hipi2])
+```
+
+```{r pi_graphics3, echo=FALSE, fig.dim=c(8,6)}
+corrplot.mixed(pi_cor2, upper='ellipse', lower='number', tl.pos='lt')
+```
+
+\pagebreak
+
+The following two plots do the same thing for the `r length(pi1)` elements of $\pi$ with a posterior mean greater than $1/n!$.
+These have a total posterior mean probability of `r sum(pi1)`.
+
+```{r pi_graphics4, echo=FALSE, fig.dim=c(8,3)}
+bp <- boxplot(pi_thin1, plot=F)
+for (i in 1:sum(hipi1)) {
+  bp$stats[5,i] = quantile(pi_thin1[,i], 0.9, names=F)
+}
+bxp(bp, outline=F, las=2)
+points(1:sum(hipi1), pi_mean[hipi1])
+```
+
+```{r pi_graphics5, echo=FALSE, fig.dim=c(8,5)}
+corrplot(pi_cor1, method='ellipse')
+```
+
+\pagebreak
+
+### Metropolis-Hastings acceptance probabilities
+
+Here we plot the acceptance probability for the Metropolis-Hastings proposals of $\alpha$, at the M (mutation) phase of each SMC cycle.
+We plot it against the value of $\lambda$ prevailing at the cycle.
+
+```{r alaPr, echo=FALSE}
+ggplot(data = cycle_stats) +
+  geom_point(aes(x = lambda, y = alpha_aPr)) +
+  labs(x = TeX("\\lambda"),
+       y = TeX("Acceptance probability of \\alpha proposals")) +
+  theme_minimal()
+```
+
+Notice the uneven grid of points defining the SMC cycles.
+We need more simulation for smaller and larger values of $\lambda$ to deal with particle depletion.
+
+Next, we show the acceptance probability for Metropolis-Hastings proposals of blocks of the $\gamma$ parameter, also at the M phase of each SMC cycle.
+The first figure shows acceptance probabilities for blocks of preferences sharing the same most preferred object.
+So, for example, the block `[a...]` of $\gamma$ weights consists of weights for all of the preferences in which object $x$ is preferred to all other objects in $T = \{a,b,c,d,e\}$.
+
+```{r big_aPr, echo=FALSE}
+big_aPr <- as_tibble(RP_sim$big_aPr)
+big_aPr$lambda <- cycle_stats$lambda
+
+aPr_long <- pivot_longer(
+  big_aPr, cols = -lambda, names_to = "block", values_to = "aPr"
+)
+
+ggplot() +
+  geom_point(data = aPr_long,
+             aes(x = lambda, y = aPr, group = block, shape = block),
+             size = 2) +
+  labs(x = TeX("\\lambda"),
+       y = "Acceptance probability by block for large blocks") +
+  theme_minimal() +
+  theme(
+    legend.position = c(0.8, 0.8)
+  )
+```
+
+This next figure shows acceptance probabilities for blocks of preferences sharing the same first and second most preferred objects.
+
+```{r sm_aPr, echo=FALSE}
+sm_aPr <- as_tibble(RP_sim$sm_aPr)
+sm_aPr$lambda <- cycle_stats$lambda
+
+aPr_long <- pivot_longer(
+  sm_aPr, cols = -lambda, names_to = "block", values_to = "aPr"
+)
+
+ggplot() +
+  geom_point(data = aPr_long,
+             aes(x = lambda, y = aPr, group = block),
+             size = 0.8) +
+  labs(x = TeX("\\lambda"),
+       y = "Acceptance probability by block for small blocks") +
+  theme_minimal()
+```

@@ -1,5 +1,10 @@
+# run_simulations.R
+
+# Run simulations for the RanCh paper.
+
 library(tidyverse)
 library(extraDistr)
+library(RanCh)
 
 set.seed(123456)
 
@@ -29,7 +34,7 @@ cnames <- c('max_min_ln_marl',
 
 # SMC paramters
 J <- 20    # Number of particle groups
-M <- 800   # Number of particles per group
+M <- 4000   # Number of particles per group
 
 # Set up schedule of parameters for C-S-M SMC cycles
 ####################################################
@@ -48,7 +53,7 @@ quant_p <- c(0.025, 0.05, 0.5, 0.95, 0.975)
 #Rprof('profile')
 
 # Hyperparameters defining gamma prior on scalar alpha
-alpha_prior <- create_alpha_prior(u$n, 2.5, 0.08, 0.05, 1e-7)
+alpha_prior <- create_alpha_prior(u$n, 4.0, 0.5)
 
 # Loop over all data sets
 for (i in seq(n_experiments)) {
@@ -64,19 +69,21 @@ for (i in seq(n_experiments)) {
   # Computations associated with prior
   sim[[i]]$alpha_prior = alpha_prior
 
-  # Very fast computations
+  # Computations that are very fast
   P <- P_uniform(u$n)
   sim[[i]]$max_min_ln_marl <- dmultinomRC(P, N, categorical=TRUE, log=TRUE)
   Alpha <- DirRC_constant_shape(u$n, 1.0)
   sim[[i]]$uniform_P_ln_marl <- dDirMultinomRC(Alpha, N, categorical=TRUE, log=TRUE)
-  P <- proportions(N)
+  P <- P_frequencies(N)
   sim[[i]]$P_maxl <- dmultinomRC(P, N, categorical=TRUE, log=TRUE)
 
+  # Computations related to maximum likelihood estimation
   if (i %in% pi_maxl_set) {
     sim[[i]]$pi_maxl_time <- system.time(
       sim[[i]]$pi_maxl <- compute_pi_ln_maxl(u, Nv))
   }
 
+  # Computations related to RC model simulation
   if (i %in% RC_sim_set) {
     sim[[i]]$RC_time <- system.time(
       RC_sim <- run_RC_sim(u, J, M, alpha_prior, Nv))
@@ -94,6 +101,7 @@ for (i in seq(n_experiments)) {
     sim[[i]]$RC_alpha2_stats <- ind_groups_stats(RC_sim$alpha^2, J, quant_p)
   }
 
+  # Computations related to RP model simulation
   if (i %in% RP_sim_set) {
     sim[[i]]$RP_time <- system.time(
       RP_sim <- run_RP_sim(u, J, M, alpha_prior, Nv, lambda_values,
@@ -107,8 +115,6 @@ for (i in seq(n_experiments)) {
     sim[[i]]$RP_lambda_stats <- RP_sim$lambda_stats
     sim[[i]]$RP_cycle_stats <- RP_sim$cycle_stats
     sim[[i]]$RP_aPr <- list(big = RP_sim$big_aPr, sm = RP_sim$sm_aPr)
-    sim[[i]]$RP_alpha_aPr <- RP_sim$alpha_aPr
-    sim[[i]]$RP_alpha_mu <- RP_sim$alpha_mu
     sim[[i]]$RP_binp_funcs <-
       compute_RP_binp_funcs(u, RP_sim$gamma, J, Nv, p_grid)
     sim[[i]]$RP_alpha_funcs <-
