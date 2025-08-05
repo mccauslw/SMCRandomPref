@@ -10,8 +10,20 @@ output:
       gensymb: null
 ---
 
-```{r setup, echo=FALSE}
-#knitr::opts_chunk$set(include = TRUE)
+```{r note, echo=FALSE, include = FALSE}
+# To use this R Markdown file, pass the following parameters:
+# RC_sim       simulation matrix for Dirichlet RC model, creating using RanCh::run_RC_sim(...)
+# RP_sim       simulation matrix for Dirichlet RP model, creating using RanCh::run_RP_sim(...)
+# u            universe object, created using RanCh::universe(...)
+# alpha_prior  prior distribution for alpha, created using RanCh::alpha_prior(...)
+# N            choice data matrix
+# J            number of SMC particle groups
+# M            number of SMC particles per group
+# data_name    name of the choice data set
+```
+
+```{r setup, echo=FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
 library(ggplot2)
 library(latex2exp)
 library(patchwork)
@@ -71,6 +83,7 @@ ggplot(cycle_stats, aes(x = lambda)) +
 lambda_stats <- RP_sim$lambda_stats
 aggr_stats <- lambda_stats$aggregates
 gr_df <- as_tibble(lambda_stats$gr_cum_ln_marl)
+
 gr_df$lambda <- lambda_stats$aggregates[,'lambda']
 
 gr_df$aggr_cum_ln_marl <- aggr_stats[,'cum_ln_marl']
@@ -81,9 +94,9 @@ gr_long <- pivot_longer(
 
 ggplot() +
   geom_line(data = gr_long, aes(x = lambda, y = cum_ln_marl, group = group),
-            color = "grey", size = 0.2) +
+            color = "grey", linewidth = 0.2) +
   geom_line(data = gr_long, aes(x = lambda, y = aggr_cum_ln_marl),
-            color = "black", size = 0.3) +
+            color = "black", linewidth = 0.3) +
   labs(x = TeX("\\lambda"), y = TeX("$\\log\\,f_{\\lambda}(y)$ by group")) +
   theme_minimal()
 ```
@@ -156,8 +169,6 @@ for (i in 1:(n-1)) {
     b <- b + 1
   }
 }
-
-wrap_plots(plots, ncol = n-1)
 ```
 
 \pagebreak
@@ -295,7 +306,7 @@ ggplot() +
        y = "Acceptance probability by block for large blocks") +
   theme_minimal() +
   theme(
-    legend.position = c(0.8, 0.8)
+    legend.position.inside = c(0.8, 0.8)
   )
 ```
 
